@@ -1,9 +1,8 @@
-# Dependency directories
+# Dependencies
 node_modules/
 .pnpm-store/
 
-# Build outputs
-/assets
+# Build outputs (except assets which we need)
 dist/
 build/
 .vite/
@@ -21,7 +20,6 @@ yarn-error.log
 .env
 .env.local
 .env.*.local
-!.env.example
 
 # Editor and OS files
 .DS_Store
@@ -35,6 +33,15 @@ __pycache__/
 *.egg-info/
 .venv/
 
-# Docker and deployment
-uv.lock
+# Git
+.git/
+.gitignore
 
+# Documentation
+*.md
+!README.md
+
+# Deployment
+deploy.sh
+Dockerfile
+.dockerignore

@@ -43,21 +43,14 @@ The assets will be available at `http://localhost:4444` with CORS enabled.
 ### 4. Run the MCP server
 
 ```bash
-# Create and activate virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
+# Install uv if you don't have it
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Install dependencies
-pip install -r dinner_server_python/requirements.txt
-
-# Start the server
-uvicorn dinner_server_python.main:app --port 8000
+# Install dependencies and run the server
+uv run python dinner_server_python/main.py
 ```
 
-For debug logging:
-```bash
-uvicorn dinner_server_python.main:app --port 8000 --log-level debug
-```
+The server will start on `http://localhost:8000` with the MCP endpoint at `/mcp`.
 
 ## Testing in ChatGPT
 
@@ -134,7 +127,25 @@ The widget is rendered inline in ChatGPT using the built assets.
 
 ## Deploying
 
-To deploy to production:
+### Deploy to Google Cloud Run
+
+The easiest way to deploy is to Google Cloud Run:
+
+```bash
+./deploy.sh
+```
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete deployment instructions, including:
+- Quick deployment with the provided script
+- Manual deployment steps
+- Configuration options
+- Monitoring and troubleshooting
+- Cost estimation
+- Custom domains and CI/CD
+
+### Deploy to Other Platforms
+
+To deploy to other platforms:
 
 1. Build the widgets with your production URL:
    ```bash
