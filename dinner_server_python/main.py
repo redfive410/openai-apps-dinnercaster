@@ -65,15 +65,6 @@ class AddMealInput(BaseModel):
         min_length=1,
         description="The name of the meal/dish",
     )
-    date: str = Field(
-        ...,
-        min_length=1,
-        description="The date for this meal in YYYY-MM-DD format",
-    )
-    notes: str = Field(
-        default="",
-        description="Optional notes, recipe, or ingredients",
-    )
 
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
 
@@ -103,18 +94,9 @@ ADD_MEAL_INPUT_SCHEMA: Dict[str, Any] = {
             "type": "string",
             "minLength": 1,
             "description": "The name of the meal/dish",
-        },
-        "date": {
-            "type": "string",
-            "minLength": 1,
-            "description": "The date for this meal in YYYY-MM-DD format",
-        },
-        "notes": {
-            "type": "string",
-            "description": "Optional notes, recipe, or ingredients",
         }
     },
-    "required": ["meal", "date"],
+    "required": ["meal"],
     "additionalProperties": False,
 }
 
@@ -180,7 +162,7 @@ async def _list_tools() -> List[types.Tool]:
         types.Tool(
             name="add_meal",
             title="Add meal to dinner plan",
-            description="Adds a meal to the dinner plan with a date and optional notes.",
+            description="Adds a meal to the dinner plan.",
             inputSchema=deepcopy(ADD_MEAL_INPUT_SCHEMA),
             _meta=_tool_meta("add_meal"),
         ),
@@ -291,13 +273,11 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
         meal = {
             "id": f"meal-{next_id}",
             "meal": meal_name,
-            "date": payload.date,
-            "notes": payload.notes or "",
         }
         next_id += 1
         meals.append(meal)
 
-        return types.ServerResult(_reply_with_meals(f'Added "{meal["meal"]}" for {meal["date"]}.'))
+        return types.ServerResult(_reply_with_meals(f'Added "{meal["meal"]}".'))
 
     elif tool_name == "remove_meal":
         try:

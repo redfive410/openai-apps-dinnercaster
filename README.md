@@ -72,13 +72,11 @@ The server will start on `http://localhost:8000` with the MCP endpoint at `/mcp`
 Adds a meal to the dinner plan.
 
 **Parameters:**
-- `meal` (string, required): The name of the meal/dish
-- `date` (string, required): The date in YYYY-MM-DD format
-- `notes` (string, optional): Recipe notes, ingredients, or cooking tips
+- `name` (string, required): The name of the meal/dish
 
 **Example:**
 ```
-Add chicken tikka masala to my dinner plan for 2025-12-01
+Add steak to my dinner plan
 ```
 
 ### remove_meal
