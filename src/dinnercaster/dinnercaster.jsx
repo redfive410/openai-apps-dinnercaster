@@ -1,10 +1,11 @@
-import React, { useRef, useState, useEffect, useMemo } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   AnimatePresence,
   motion,
 } from "framer-motion";
 import { UtensilsCrossed, Plus, Calendar, Trash2 } from "lucide-react";
 import { useOpenAiGlobal } from "../use-openai-global";
+import { useWidgetState } from "../use-widget-state";
 
 /* Framer-motion wrappers */
 const MotionCard = motion.div;
@@ -163,9 +164,32 @@ export function App() {
 
   console.log('=== DINNER TOOL OUTPUT ===', toolOutput);
 
-  const initialData = useMemo(() => buildInitialData(toolOutput), [toolOutput]);
-  const [data, setData] = useState(initialData);
+  // Use useWidgetState to persist state across re-renders
+  const [data, setData] = useWidgetState(() => {
+    // Initialize from toolOutput first, then fall back to localStorage
+    if (toolOutput?.meals) {
+      return buildInitialData(toolOutput);
+    }
 
+    const stored = localStorage.getItem('dinnerData');
+    if (stored) {
+      try {
+        const meals = JSON.parse(stored);
+        return { meals: meals.map((m) => ({
+          id: m.id ?? uid(),
+          date: typeof m.date === "string" ? m.date : null,
+          meal: m.meal ?? "",
+          notes: m.notes ?? "",
+        })) };
+      } catch (e) {
+        console.error('Failed to parse stored dinner data:', e);
+      }
+    }
+
+    return { meals: [] };
+  });
+
+  // Update state when toolOutput changes (subsequent tool calls)
   useEffect(() => {
     console.log('toolOutput changed:', toolOutput);
     if (toolOutput?.meals) {
@@ -174,10 +198,11 @@ export function App() {
       console.log('New dinner data:', newData);
       setData(newData);
     }
-  }, [toolOutput]);
+  }, [toolOutput, setData]);
 
+  // Save to localStorage for standalone mode
   useEffect(() => {
-    if (!toolOutput) {
+    if (!toolOutput && data?.meals) {
       localStorage.setItem('dinnerData', JSON.stringify(data.meals));
     }
   }, [data, toolOutput]);
