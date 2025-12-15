@@ -6,6 +6,7 @@ plan that gets rendered in a widget UI."""
 
 from __future__ import annotations
 
+import os
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import lru_cache
@@ -14,6 +15,7 @@ from typing import Any, Dict, List
 
 import mcp.types as types
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 
@@ -81,9 +83,15 @@ class RemoveMealInput(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
 
 
+# Disable DNS rebinding protection for Cloud Run
+transport_security = TransportSecuritySettings(
+    enable_dns_rebinding_protection=False,
+)
+
 mcp = FastMCP(
     name="dinner-app",
     stateless_http=True,
+    transport_security=transport_security,
 )
 
 
@@ -336,6 +344,7 @@ app = mcp.streamable_http_app()
 
 try:
     from starlette.middleware.cors import CORSMiddleware
+    from starlette.middleware.trustedhost import TrustedHostMiddleware
     from starlette.routing import Route
     from starlette.responses import PlainTextResponse, FileResponse
     from starlette.staticfiles import StaticFiles
@@ -390,6 +399,9 @@ try:
     app.routes.insert(3, Route("/{filename}.js", handle_options, methods=["OPTIONS"]))
     app.routes.insert(4, Route("/{filename}.css", handle_options, methods=["OPTIONS"]))
 
+    # Add TrustedHost middleware to allow all hosts (needed for Cloud Run)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
+
     # Add CORS middleware BEFORE routes
     app.add_middleware(
         CORSMiddleware,
@@ -408,5 +420,5 @@ if __name__ == "__main__":
     import uvicorn
 
     port = int(os.environ.get("PORT", 8000))
-    print(f"Dinner MCP server listening on http://localhost:{port}/mcp")
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
+    print(f"Dinner MCP server listening on http://0.0.0.0:{port}/mcp")
+    uvicorn.run(app, host="0.0.0.0", port=port)

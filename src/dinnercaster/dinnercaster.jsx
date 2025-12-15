@@ -162,8 +162,6 @@ function MealItem({ meal, index, updateMealById, deleteMealById }) {
 export function App() {
   const toolOutput = useOpenAiGlobal("toolOutput");
 
-  console.log('=== DINNER TOOL OUTPUT ===', toolOutput);
-
   // Use useWidgetState to persist state across re-renders
   const [data, setData] = useWidgetState(() => {
     // Initialize from toolOutput first, then fall back to localStorage
@@ -191,11 +189,8 @@ export function App() {
 
   // Update state when toolOutput changes (subsequent tool calls)
   useEffect(() => {
-    console.log('toolOutput changed:', toolOutput);
     if (toolOutput?.meals) {
-      console.log('Building new data from toolOutput.meals:', toolOutput.meals);
       const newData = buildInitialData(toolOutput);
-      console.log('New dinner data:', newData);
       setData(newData);
     }
   }, [toolOutput, setData]);
@@ -207,7 +202,7 @@ export function App() {
     }
   }, [data, toolOutput]);
 
-  const meals = data.meals || [];
+  const meals = data?.meals || [];
 
   const addMeal = () => {
     const newId = uid();
