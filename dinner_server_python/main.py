@@ -147,6 +147,7 @@ def _tool_meta(tool_name: str) -> Dict[str, Any]:
             "openai/outputTemplate": DINNER_WIDGET.template_uri,
             "openai/toolInvocation/invoking": "Showing meal plan",
             "openai/toolInvocation/invoked": "Showed meal plan",
+            "openai/readOnlyHint": True,
         }
     return {}
 

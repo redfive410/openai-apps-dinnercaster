@@ -49,23 +49,9 @@ function buildInitialData(toolOutput) {
     notes: m.notes ?? "",
   });
 
-  if (toolOutput?.meals) {
-    return {
-      meals: toolOutput.meals.map(addMealDefaults),
-    };
-  }
-
-  const stored = localStorage.getItem('dinnerData');
-  let dinnerData = [];
-  if (stored) {
-    try {
-      dinnerData = JSON.parse(stored);
-    } catch (e) {
-      console.error('Failed to parse stored dinner data:', e);
-    }
-  }
-
-  return { meals: (dinnerData || []).map(addMealDefaults) };
+  return {
+    meals: (toolOutput?.meals || []).map(addMealDefaults),
+  };
 }
 
 /* --------------------------------- BaseCard -------------------------------- */
@@ -161,48 +147,30 @@ function MealItem({ meal, index, updateMealById, deleteMealById }) {
 /* ================================ App =================================== */
 export function App() {
   const toolOutput = useOpenAiGlobal("toolOutput");
+  const widgetState = useOpenAiGlobal("widgetState");
 
-  // Use useWidgetState to persist state across re-renders
+  // Initialize state: widgetState (cached) > toolOutput (fresh) > empty
   const [data, setData] = useWidgetState(() => {
-    // Initialize from toolOutput first, then fall back to localStorage
+    // Check widgetState first (persisted user changes)
+    if (widgetState?.meals) {
+      return widgetState;
+    }
+    // Then check toolOutput (fresh data from tool call)
     if (toolOutput?.meals) {
       return buildInitialData(toolOutput);
     }
-
-    const stored = localStorage.getItem('dinnerData');
-    if (stored) {
-      try {
-        const meals = JSON.parse(stored);
-        return { meals: meals.map((m) => ({
-          id: m.id ?? uid(),
-          date: typeof m.date === "string" ? m.date : null,
-          meal: m.meal ?? "",
-          notes: m.notes ?? "",
-        })) };
-      } catch (e) {
-        console.error('Failed to parse stored dinner data:', e);
-      }
-    }
-
+    // Default to empty
     return { meals: [] };
   });
 
-  // Update state when toolOutput changes (subsequent tool calls)
+  const meals = data?.meals || [];
+
+  // Sync new toolOutput data when it arrives
   useEffect(() => {
     if (toolOutput?.meals) {
-      const newData = buildInitialData(toolOutput);
-      setData(newData);
+      setData(buildInitialData(toolOutput));
     }
-  }, [toolOutput, setData]);
-
-  // Save to localStorage for standalone mode
-  useEffect(() => {
-    if (!toolOutput && data?.meals) {
-      localStorage.setItem('dinnerData', JSON.stringify(data.meals));
-    }
-  }, [data, toolOutput]);
-
-  const meals = data?.meals || [];
+  }, [toolOutput]);
 
   const addMeal = () => {
     const newId = uid();
@@ -241,7 +209,7 @@ export function App() {
             <div className="w-full flex top-0 left-0 absolute p-5 z-20 bg-gradient-to-b from-orange-50 to-transparent">
               <h1 className="font-semibold text-2xl tracking-tight text-orange-800 flex items-center gap-2">
                 <UtensilsCrossed className="w-6 h-6" />
-                Dinner Planner
+                DinnerCaster2
               </h1>
               <div className="flex-auto" />
               <Plus
@@ -256,8 +224,7 @@ export function App() {
               {meals.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <UtensilsCrossed className="w-16 h-16 text-orange-300 mb-4" />
-                  <p className="text-orange-600/70 text-lg">No meals planned yet</p>
-                  <p className="text-orange-500/50 text-sm mt-2">Click the + to add your first meal</p>
+                  <p className="text-orange-600/70 text-lg">...</p>
                 </div>
               ) : (
                 <AnimatePresence initial={false}>
