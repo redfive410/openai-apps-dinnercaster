@@ -30,8 +30,6 @@ For production deployment with a custom URL:
 
 ```bash
 BASE_URL=https://your-ngrok-url.ngrok-free.dev pnpm run build
-
-BASE_URL=https://dinnercaster-mcp-7lsyxpfena-uw.a.run.app pnpm run build
 ```
 
 ### 3. Start the asset server
