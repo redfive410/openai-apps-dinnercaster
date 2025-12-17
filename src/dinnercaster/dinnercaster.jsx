@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   AnimatePresence,
   motion,
 } from "framer-motion";
-import { UtensilsCrossed, Plus } from "lucide-react";
+import { UtensilsCrossed } from "lucide-react";
 import { useOpenAiGlobal } from "../use-openai-global";
 import { useWidgetState } from "../use-widget-state";
 
@@ -12,28 +12,6 @@ const MotionCard = motion.div;
 
 const MAX_CARD_WIDTH_REM = 28;
 const MAX_CARD_HEIGHT_REM = 31;
-
-/* --------------------------------- Utils -------------------------------- */
-
-function uid() {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return (
-    (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)).toUpperCase()
-  );
-}
-
-function buildInitialData(toolOutput, widgetState) {
-  const addMealDefaults = (m) => ({
-    id: m.id ?? uid(),
-    meal: m.meal ?? "",
-  });
-
-  return {
-    meals: (widgetState?.meals || toolOutput?.meals || []).map(addMealDefaults),
-  };
-}
 
 /* --------------------------------- BaseCard -------------------------------- */
 function BaseCard({ children }) {
@@ -45,7 +23,7 @@ function BaseCard({ children }) {
 }
 
 /* ============================= Meal row ============================= */
-function MealItem({ meal, updateMealById }) {
+function MealItem({ meal }) {
   return (
     <motion.div
       layout
@@ -58,13 +36,10 @@ function MealItem({ meal, updateMealById }) {
       <div className="flex gap-3 p-4 items-center">
         <UtensilsCrossed className="w-5 h-5 text-orange-500" />
 
-        {/* Meal name */}
-        <input
-          onChange={(e) => updateMealById(meal.id, { meal: e.target.value })}
-          placeholder="What's for dinner?"
-          className="leading-tight flex-auto border-transparent border-0 bg-transparent !text-base p-0 outline-none focus-visible:ring-0 text-gray-800 font-medium"
-          value={meal.meal}
-        />
+        {/* Meal name - read only */}
+        <div className="leading-tight flex-auto text-base text-gray-800 font-medium">
+          {meal.meal}
+        </div>
       </div>
     </motion.div>
   );
@@ -77,32 +52,27 @@ export function App() {
 
   // Initialize state: widgetState (cached) > toolOutput (fresh) > empty
   const [data, setData] = useWidgetState(() => {
-    return buildInitialData(toolOutput, widgetState);
+    return {
+      meals: widgetState?.meals || toolOutput?.meals || [],
+    }
   });
 
-  const meals = data?.meals || [];
+  // Track the last synced toolOutput to avoid unnecessary updates
+  const lastSyncedToolOutputRef = useRef(null);
 
-  // Sync new toolOutput data when it arrives (overrides widget state)
+  // Update state when toolOutput changes (from new callTool invocations)
   useEffect(() => {
-    if (toolOutput?.meals) {
-      setData(buildInitialData(toolOutput, undefined));
+    const toolOutputMeals = toolOutput?.meals;
+    const lastSyncedMeals = lastSyncedToolOutputRef.current;
+
+    // Only update if toolOutput has meals and they're different from last sync
+    if (toolOutputMeals && JSON.stringify(toolOutputMeals) !== JSON.stringify(lastSyncedMeals)) {
+      lastSyncedToolOutputRef.current = toolOutputMeals;
+      setData({ meals: toolOutputMeals });
     }
-  }, [toolOutput]);
+  }, [toolOutput, setData]);
 
-  const addMeal = () => {
-    setData((prev) => ({
-      meals: [
-        { id: uid(), meal: "" },
-        ...prev.meals,
-      ],
-    }));
-  };
-
-  const updateMealById = (id, val) => {
-    setData((prev) => ({
-      meals: prev.meals.map((m) => (m.id === id ? { ...m, ...val } : m)),
-    }));
-  };
+  const meals = data?.meals || [];
 
   return (
     <div className="my-5 antialiased">
@@ -116,7 +86,7 @@ export function App() {
             <div className="w-full flex top-0 left-0 absolute p-5 z-20 bg-gradient-to-b from-orange-50 to-transparent">
               <h1 className="font-semibold text-2xl tracking-tight text-orange-800 flex items-center gap-2">
                 <UtensilsCrossed className="w-6 h-6" />
-                Dinnercaster2 v0.0
+                Dinnercaster2
               </h1>
               <div className="flex-auto" />
             </div>
@@ -134,7 +104,6 @@ export function App() {
                     <MealItem
                       key={meal.id}
                       meal={meal}
-                      updateMealById={updateMealById}
                     />
                   ))}
                 </AnimatePresence>

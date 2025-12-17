@@ -18,11 +18,9 @@ from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-
 # Meal state management
 meals: List[Dict[str, Any]] = []
 next_id: int = 1
-
 
 @dataclass(frozen=True)
 class WidgetConfig:
@@ -105,7 +103,7 @@ ADD_MEAL_INPUT_SCHEMA: Dict[str, Any] = {
         }
     },
     "required": ["meal"],
-    "additionalProperties": False,
+    "additionalProperties": True,
 }
 
 REMOVE_MEAL_INPUT_SCHEMA: Dict[str, Any] = {
@@ -118,13 +116,13 @@ REMOVE_MEAL_INPUT_SCHEMA: Dict[str, Any] = {
         }
     },
     "required": ["id"],
-    "additionalProperties": False,
+    "additionalProperties": True,
 }
 
 SHOW_MEALS_INPUT_SCHEMA: Dict[str, Any] = {
     "type": "object",
     "properties": {},
-    "additionalProperties": False,
+    "additionalProperties": True,
 }
 
 
@@ -147,7 +145,6 @@ def _tool_meta(tool_name: str) -> Dict[str, Any]:
             "openai/outputTemplate": DINNER_WIDGET.template_uri,
             "openai/toolInvocation/invoking": "Showing meal plan",
             "openai/toolInvocation/invoked": "Showed meal plan",
-            "openai/readOnlyHint": True,
         }
     return {}
 
@@ -188,9 +185,13 @@ async def _list_tools() -> List[types.Tool]:
             description="Shows the current dinner plan with all scheduled meals.",
             inputSchema=deepcopy(SHOW_MEALS_INPUT_SCHEMA),
             _meta=_tool_meta("show_meals"),
+            annotations={
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "openWorldHint": False,
+            },
         ),
     ]
-
 
 @mcp._mcp_server.list_resources()
 async def _list_resources() -> List[types.Resource]:
@@ -229,10 +230,8 @@ async def _handle_read_resource(req: types.ReadResourceRequest) -> types.ServerR
     return types.ServerResult(types.ReadResourceResult(contents=contents))
 
 
-def _reply_with_meals(message: str = "") -> types.CallToolResult:
+def _reply_with_meals(meals_list: List[Dict[str, Any]], message: str = "") -> types.CallToolResult:
     """Helper to create a tool result with current meals."""
-    global meals
-
     content = []
     if message:
         content.append(types.TextContent(type="text", text=message))
@@ -247,7 +246,7 @@ def _reply_with_meals(message: str = "") -> types.CallToolResult:
 
     return types.CallToolResult(
         content=content,
-        structuredContent={"meals": meals},
+        structuredContent={"meals": meals_list},
         _meta=meta,
     )
 
@@ -277,16 +276,16 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
 
         meal_name = payload.meal.strip()
         if not meal_name:
-            return types.ServerResult(_reply_with_meals("Missing meal name."))
+            return types.ServerResult(_reply_with_meals(meals, "Missing meal name."))
 
         meal = {
             "id": f"meal-{next_id}",
             "meal": meal_name,
         }
-        next_id += 1
         meals.append(meal)
+        next_id += 1
 
-        return types.ServerResult(_reply_with_meals(f'Added "{meal["meal"]}".'))
+        return types.ServerResult(_reply_with_meals(meals, f'Added "{meal["meal"]}".'))
 
     elif tool_name == "remove_meal":
         try:
@@ -306,22 +305,21 @@ async def _call_tool_request(req: types.CallToolRequest) -> types.ServerResult:
 
         meal_id = payload.id
         if not meal_id:
-            return types.ServerResult(_reply_with_meals("Missing meal id."))
+            return types.ServerResult(_reply_with_meals(meals, "Missing meal id."))
 
         # Find the meal
         meal = next((m for m in meals if m["id"] == meal_id), None)
         if not meal:
-            return types.ServerResult(_reply_with_meals(f"Meal {meal_id} was not found."))
+            return types.ServerResult(_reply_with_meals(meals, f"Meal {meal_id} was not found."))
 
         # Remove the meal
         meals = [m for m in meals if m["id"] != meal_id]
 
-        return types.ServerResult(_reply_with_meals(f'Removed "{meal["meal"]}".'))
+        return types.ServerResult(_reply_with_meals(meals, f'Removed "{meal["meal"]}".'))
 
     elif tool_name == "show_meals":
-        # Just return the current list of meals
         message = f"You have {len(meals)} meal(s) planned." if meals else "Your dinner plan is empty."
-        return types.ServerResult(_reply_with_meals(message))
+        return types.ServerResult(_reply_with_meals(meals, message))
 
     else:
         return types.ServerResult(
