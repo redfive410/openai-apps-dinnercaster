@@ -103,7 +103,7 @@ ADD_MEAL_INPUT_SCHEMA: Dict[str, Any] = {
         }
     },
     "required": ["meal"],
-    "additionalProperties": True,
+    "additionalProperties": False,
 }
 
 REMOVE_MEAL_INPUT_SCHEMA: Dict[str, Any] = {
@@ -116,13 +116,13 @@ REMOVE_MEAL_INPUT_SCHEMA: Dict[str, Any] = {
         }
     },
     "required": ["id"],
-    "additionalProperties": True,
+    "additionalProperties": False,
 }
 
 SHOW_MEALS_INPUT_SCHEMA: Dict[str, Any] = {
     "type": "object",
     "properties": {},
-    "additionalProperties": True,
+    "additionalProperties": False,
 }
 
 
