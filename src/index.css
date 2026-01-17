@@ -1,4 +1,6 @@
 @import "tailwindcss" source(".");
+@import "@openai/apps-sdk-ui/css";
+@source "../node_modules/@openai/apps-sdk-ui";
 
 @tailwind base;
 @tailwind components;
