@@ -1,3 +1,4 @@
+import "../index.css"; // Must be imported first
 import { createRoot } from "react-dom/client";
 import App from "./dinnercaster";
 
