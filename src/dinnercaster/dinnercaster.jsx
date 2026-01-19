@@ -63,11 +63,11 @@ export function App() {
               ))}
             </div>
           </div>
-          <Button onClick={handlePredict} color="primary" size="md" variant="solid">
-            Predict
-          </Button>
         </>
       )}
+      <Button onClick={handlePredict} color="primary" size="md" variant="solid">
+        Predict
+      </Button>
     </div>
   );
 }
