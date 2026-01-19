@@ -3,30 +3,31 @@ import { UtensilsCrossed } from "lucide-react";
 import { useOpenAiGlobal } from "../use-openai-global";
 import { EmptyMessage } from "@openai/apps-sdk-ui/components/EmptyMessage";
 import { Button } from "@openai/apps-sdk-ui/components/Button";
-import "./dinnercaster.css";
 
-/* ============================= Meal row ============================= */
 function MealItem({ meal, isHighlighted }) {
   return (
-    <div className={`meal-item ${isHighlighted ? "highlighted" : ""}`}>
-      <div className="meal-content">
-        <UtensilsCrossed className="meal-icon" />
-        <div className="meal-name">{meal.meal}</div>
+    <div
+      className={`rounded-lg border p-3 transition-colors ${
+        isHighlighted
+          ? "border-amber-500 bg-amber-100"
+          : "border-gray-200 bg-gray-50 hover:bg-gray-100"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <UtensilsCrossed className="h-5 w-5 text-orange-600 shrink-0" />
+        <div className="text-gray-900 font-medium">{meal.meal}</div>
       </div>
     </div>
   );
 }
 
-/* ================================ App =================================== */
 export function App() {
   const initialToolOutput = useOpenAiGlobal("toolOutput");
   const widgetState = useOpenAiGlobal("widgetState");
 
-  // Use local state to manage the current tool output
   const [toolOutput, setToolOutput] = useState(initialToolOutput);
   const [highlightedMealId, setHighlightedMealId] = useState(null);
 
-  // Update local state when initial values change
   useEffect(() => {
     setToolOutput(initialToolOutput);
   }, [initialToolOutput]);
@@ -41,19 +42,18 @@ export function App() {
   };
 
   return (
-    <div className="dinnercaster-container">
-      <h1 className="dinnercaster-title">
-        <UtensilsCrossed className="title-icon" />
+    <div className="p-6 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-semibold text-center mb-6 flex items-center justify-center gap-2">
+        <UtensilsCrossed className="h-7 w-7 text-orange-600" />
         Dinnercaster
       </h1>
 
       {!toolOutput ? (
-        <EmptyMessage>
-        </EmptyMessage>
+        <EmptyMessage />
       ) : (
         <>
-          <div className="meals-list">
-            <div className="meals-container">
+          <div className="border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
+            <div className="flex flex-col gap-2">
               {meals.map((meal) => (
                 <MealItem
                   key={meal.id}
