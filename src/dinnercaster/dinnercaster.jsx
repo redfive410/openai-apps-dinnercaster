@@ -42,7 +42,7 @@ export function App() {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto min-h-screen">
+    <div className="p-6 max-w-3xl mx-auto">
       <h1 className="text-2xl font-semibold text-center mb-6 flex items-center justify-center gap-2">
         <UtensilsCrossed className="h-7 w-7 text-green-700" />
         Dinnercaster
