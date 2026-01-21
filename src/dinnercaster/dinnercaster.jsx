@@ -9,13 +9,13 @@ function MealItem({ meal, isHighlighted }) {
     <div
       className={`rounded-lg border p-3 transition-colors ${
         isHighlighted
-          ? "border-amber-500 bg-amber-100"
-          : "border-gray-200 bg-gray-50 hover:bg-gray-100"
+          ? "border-green-500 bg-green-100"
+          : "border-gray-200"
       }`}
     >
       <div className="flex items-center gap-3">
-        <UtensilsCrossed className="h-5 w-5 text-orange-600 shrink-0" />
-        <div className="text-gray-900 font-medium">{meal.meal}</div>
+        <UtensilsCrossed className="h-5 w-5 text-green-700 shrink-0" />
+        <div className="font-medium">{meal.meal}</div>
       </div>
     </div>
   );
@@ -42,9 +42,9 @@ export function App() {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-6 max-w-3xl mx-auto min-h-screen">
       <h1 className="text-2xl font-semibold text-center mb-6 flex items-center justify-center gap-2">
-        <UtensilsCrossed className="h-7 w-7 text-orange-600" />
+        <UtensilsCrossed className="h-7 w-7 text-green-700" />
         Dinnercaster
       </h1>
 
@@ -52,7 +52,7 @@ export function App() {
         <EmptyMessage />
       ) : (
         <>
-          <div className="border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
+          <div className="border rounded-xl p-4 mb-4 shadow-sm">
             <div className="flex flex-col gap-2">
               {meals.map((meal) => (
                 <MealItem
