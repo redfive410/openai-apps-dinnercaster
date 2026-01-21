@@ -52,7 +52,7 @@ export function App() {
         <EmptyMessage />
       ) : (
         <>
-          <div className="border rounded-xl p-4 mb-4 shadow-sm">
+          <div className="border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
             <div className="flex flex-col gap-2">
               {meals.map((meal) => (
                 <MealItem
