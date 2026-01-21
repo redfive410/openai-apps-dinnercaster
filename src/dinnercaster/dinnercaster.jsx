@@ -10,7 +10,7 @@ function MealItem({ meal, isHighlighted }) {
       className={`rounded-lg border p-3 transition-colors ${
         isHighlighted
           ? "border-green-500 bg-green-100"
-          : "border-gray-200"
+          : "border-gray-200 bg-gray-50 hover:bg-gray-100"
       }`}
     >
       <div className="flex items-center gap-3">
